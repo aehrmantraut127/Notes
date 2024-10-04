@@ -94,5 +94,25 @@ namespace Notes
                 }
             }
         }
+
+        public static void UpdateNote(string oldTitle, DateTime oldDate, string newTitle, string rtfText)
+        {
+            using (IDbConnection cnn = new SQLiteConnection(LoadConnectionString()))
+            {
+                cnn.Open();
+                string query = "UPDATE messages SET title = @NewTitle, message = @Message, date = @NewDate WHERE title = @OldTitle AND date = @OldDate";
+
+                using (var cmd = new SQLiteCommand(query, (SQLiteConnection)cnn))
+                {
+                    cmd.Parameters.AddWithValue("@NewTitle", newTitle);
+                    cmd.Parameters.AddWithValue("@Message", rtfText); // Assuming the RTF content is a string
+                    cmd.Parameters.AddWithValue("@NewDate", DateTime.Now);
+                    cmd.Parameters.AddWithValue("@OldTitle", oldTitle); // Use the previously selected title
+                    cmd.Parameters.AddWithValue("@OldDate", oldDate); // Use the previously selected date
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
     }
 }

@@ -38,16 +38,29 @@ namespace Notes
             this.txtMessage = new DevExpress.XtraRichEdit.RichEditControl();
             this.fluentFormDefaultManager1 = new DevExpress.XtraBars.FluentDesignSystem.FluentFormDefaultManager(this.components);
             this.barButtonItem1 = new DevExpress.XtraBars.BarButtonItem();
+            this.btnDelete = new DevExpress.XtraBars.BarButtonItem();
+            this.btnHelp = new DevExpress.XtraBars.BarButtonItem();
+            this.barButtonItem2 = new DevExpress.XtraBars.BarButtonItem();
+            this.skinDropDownButtonItem1 = new DevExpress.XtraBars.SkinDropDownButtonItem();
             this.panelControl1 = new DevExpress.XtraEditors.PanelControl();
             this.panelControl3 = new DevExpress.XtraEditors.PanelControl();
             this.lblDate = new DevExpress.XtraEditors.LabelControl();
             this.btnComplete = new DevExpress.XtraEditors.SimpleButton();
             this.txtTitle = new DevExpress.XtraEditors.TextEdit();
             this.accordionCtlNotes = new DevExpress.XtraBars.Navigation.AccordionControl();
+            this.mnuNotebook = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.newNotebookToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripTextBox1 = new System.Windows.Forms.ToolStripTextBox();
             this.accordionControlElementNewNote = new DevExpress.XtraBars.Navigation.AccordionControlElement();
             this.fluentDesignFormControl1 = new DevExpress.XtraBars.FluentDesignSystem.FluentDesignFormControl();
-            this.btnDelete = new DevExpress.XtraBars.BarButtonItem();
-            this.btnHelp = new DevExpress.XtraBars.BarButtonItem();
+            this.barManager1 = new DevExpress.XtraBars.BarManager(this.components);
+            this.barDockControlTop = new DevExpress.XtraBars.BarDockControl();
+            this.barDockControlBottom = new DevExpress.XtraBars.BarDockControl();
+            this.barDockControlLeft = new DevExpress.XtraBars.BarDockControl();
+            this.barDockControlRight = new DevExpress.XtraBars.BarDockControl();
+            this.bar3 = new DevExpress.XtraBars.Bar();
+            this.bar2 = new DevExpress.XtraBars.Bar();
+            this.bar1 = new DevExpress.XtraBars.Bar();
             this.fluentDesignFormContainer1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.panelControl2)).BeginInit();
             this.panelControl2.SuspendLayout();
@@ -58,7 +71,9 @@ namespace Notes
             this.panelControl3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.txtTitle.Properties)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.accordionCtlNotes)).BeginInit();
+            this.mnuNotebook.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.fluentDesignFormControl1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.barManager1)).BeginInit();
             this.SuspendLayout();
             // 
             // fluentDesignFormContainer1
@@ -98,14 +113,45 @@ namespace Notes
             this.fluentFormDefaultManager1.Items.AddRange(new DevExpress.XtraBars.BarItem[] {
             this.barButtonItem1,
             this.btnDelete,
-            this.btnHelp});
-            this.fluentFormDefaultManager1.MaxItemId = 4;
+            this.btnHelp,
+            this.barButtonItem2,
+            this.skinDropDownButtonItem1});
+            this.fluentFormDefaultManager1.MaxItemId = 6;
             // 
             // barButtonItem1
             // 
             this.barButtonItem1.Caption = "New";
             this.barButtonItem1.Id = 0;
             this.barButtonItem1.Name = "barButtonItem1";
+            // 
+            // btnDelete
+            // 
+            this.btnDelete.Alignment = DevExpress.XtraBars.BarItemLinkAlignment.Right;
+            this.btnDelete.Border = DevExpress.XtraEditors.Controls.BorderStyles.Default;
+            this.btnDelete.Caption = "Delete Current Note";
+            this.btnDelete.Id = 1;
+            this.btnDelete.Name = "btnDelete";
+            this.btnDelete.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.btnDelete_ItemClick);
+            // 
+            // btnHelp
+            // 
+            this.btnHelp.Caption = "Help";
+            this.btnHelp.Id = 2;
+            this.btnHelp.Name = "btnHelp";
+            this.btnHelp.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.btnHelp_ItemClick);
+            // 
+            // barButtonItem2
+            // 
+            this.barButtonItem2.Alignment = DevExpress.XtraBars.BarItemLinkAlignment.Right;
+            this.barButtonItem2.Caption = "Update Current Note";
+            this.barButtonItem2.Id = 4;
+            this.barButtonItem2.Name = "barButtonItem2";
+            this.barButtonItem2.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.barButtonItem2_ItemClick);
+            // 
+            // skinDropDownButtonItem1
+            // 
+            this.skinDropDownButtonItem1.Id = 5;
+            this.skinDropDownButtonItem1.Name = "skinDropDownButtonItem1";
             // 
             // panelControl1
             // 
@@ -167,20 +213,50 @@ namespace Notes
             // 
             // accordionCtlNotes
             // 
+            this.accordionCtlNotes.AllowDrop = true;
+            this.accordionCtlNotes.AllowElementDragging = true;
+            this.accordionCtlNotes.ContextMenuStrip = this.mnuNotebook;
             this.accordionCtlNotes.Dock = System.Windows.Forms.DockStyle.Left;
             this.accordionCtlNotes.Elements.AddRange(new DevExpress.XtraBars.Navigation.AccordionControlElement[] {
             this.accordionControlElementNewNote});
             this.accordionCtlNotes.Location = new System.Drawing.Point(0, 0);
             this.accordionCtlNotes.Name = "accordionCtlNotes";
+            this.accordionCtlNotes.ScrollBarMode = DevExpress.XtraBars.Navigation.ScrollBarMode.AutoCollapse;
             this.accordionCtlNotes.ShowFilterControl = DevExpress.XtraBars.Navigation.ShowFilterControl.Always;
             this.accordionCtlNotes.Size = new System.Drawing.Size(250, 583);
             this.accordionCtlNotes.TabIndex = 1;
             this.accordionCtlNotes.ViewType = DevExpress.XtraBars.Navigation.AccordionControlViewType.HamburgerMenu;
+            this.accordionCtlNotes.FilterContent += new DevExpress.XtraBars.Navigation.FilterContentEventHandler(this.accordionCtlNotes_FilterContent);
+            // 
+            // mnuNotebook
+            // 
+            this.mnuNotebook.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.newNotebookToolStripMenuItem});
+            this.mnuNotebook.Name = "contextMenuStrip1";
+            this.mnuNotebook.Size = new System.Drawing.Size(155, 26);
+            // 
+            // newNotebookToolStripMenuItem
+            // 
+            this.newNotebookToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripTextBox1});
+            this.newNotebookToolStripMenuItem.Name = "newNotebookToolStripMenuItem";
+            this.newNotebookToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.newNotebookToolStripMenuItem.Text = "New Notebook";
+            // 
+            // toolStripTextBox1
+            // 
+            this.toolStripTextBox1.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.toolStripTextBox1.Name = "toolStripTextBox1";
+            this.toolStripTextBox1.Size = new System.Drawing.Size(100, 23);
+            this.toolStripTextBox1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.toolStripTextBox1_KeyDown);
             // 
             // accordionControlElementNewNote
             // 
+            this.accordionControlElementNewNote.Appearance.Default.Font = new System.Drawing.Font("Tahoma", 12F);
+            this.accordionControlElementNewNote.Appearance.Default.Options.UseFont = true;
             this.accordionControlElementNewNote.ImageOptions.Image = ((System.Drawing.Image)(resources.GetObject("accordionControlElementNewNote.ImageOptions.Image")));
             this.accordionControlElementNewNote.Name = "accordionControlElementNewNote";
+            this.accordionControlElementNewNote.Style = DevExpress.XtraBars.Navigation.ElementStyle.Item;
             this.accordionControlElementNewNote.Text = "New Note";
             this.accordionControlElementNewNote.Click += new System.EventHandler(this.accordionControlElementNewNote_Click);
             // 
@@ -190,31 +266,80 @@ namespace Notes
             this.fluentDesignFormControl1.Items.AddRange(new DevExpress.XtraBars.BarItem[] {
             this.barButtonItem1,
             this.btnDelete,
-            this.btnHelp});
+            this.btnHelp,
+            this.barButtonItem2,
+            this.skinDropDownButtonItem1});
             this.fluentDesignFormControl1.Location = new System.Drawing.Point(0, 0);
             this.fluentDesignFormControl1.Manager = this.fluentFormDefaultManager1;
             this.fluentDesignFormControl1.Name = "fluentDesignFormControl1";
             this.fluentDesignFormControl1.Size = new System.Drawing.Size(1117, 31);
             this.fluentDesignFormControl1.TabIndex = 2;
             this.fluentDesignFormControl1.TabStop = false;
-            this.fluentDesignFormControl1.TitleItemLinks.Add(this.btnDelete);
-            this.fluentDesignFormControl1.TitleItemLinks.Add(this.btnHelp);
+            this.fluentDesignFormControl1.TitleItemLinks.Add(this.btnDelete, true);
+            this.fluentDesignFormControl1.TitleItemLinks.Add(this.btnHelp, true);
+            this.fluentDesignFormControl1.TitleItemLinks.Add(this.barButtonItem2, true);
+            this.fluentDesignFormControl1.TitleItemLinks.Add(this.skinDropDownButtonItem1, true);
             // 
-            // btnDelete
+            // barManager1
             // 
-            this.btnDelete.Alignment = DevExpress.XtraBars.BarItemLinkAlignment.Right;
-            this.btnDelete.Border = DevExpress.XtraEditors.Controls.BorderStyles.Default;
-            this.btnDelete.Caption = "Delete Current Note";
-            this.btnDelete.Id = 1;
-            this.btnDelete.Name = "btnDelete";
-            this.btnDelete.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.btnDelete_ItemClick);
+            this.barManager1.DockControls.Add(this.barDockControlTop);
+            this.barManager1.DockControls.Add(this.barDockControlBottom);
+            this.barManager1.DockControls.Add(this.barDockControlLeft);
+            this.barManager1.DockControls.Add(this.barDockControlRight);
+            this.barManager1.Form = this;
             // 
-            // btnHelp
+            // barDockControlTop
             // 
-            this.btnHelp.Caption = "Help";
-            this.btnHelp.Id = 2;
-            this.btnHelp.Name = "btnHelp";
-            this.btnHelp.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.btnHelp_ItemClick);
+            this.barDockControlTop.CausesValidation = false;
+            this.barDockControlTop.Dock = System.Windows.Forms.DockStyle.Top;
+            this.barDockControlTop.Location = new System.Drawing.Point(0, 31);
+            this.barDockControlTop.Manager = this.barManager1;
+            this.barDockControlTop.Size = new System.Drawing.Size(1117, 0);
+            // 
+            // barDockControlBottom
+            // 
+            this.barDockControlBottom.CausesValidation = false;
+            this.barDockControlBottom.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.barDockControlBottom.Location = new System.Drawing.Point(0, 614);
+            this.barDockControlBottom.Manager = this.barManager1;
+            this.barDockControlBottom.Size = new System.Drawing.Size(1117, 0);
+            // 
+            // barDockControlLeft
+            // 
+            this.barDockControlLeft.CausesValidation = false;
+            this.barDockControlLeft.Dock = System.Windows.Forms.DockStyle.Left;
+            this.barDockControlLeft.Location = new System.Drawing.Point(0, 31);
+            this.barDockControlLeft.Manager = this.barManager1;
+            this.barDockControlLeft.Size = new System.Drawing.Size(0, 583);
+            // 
+            // barDockControlRight
+            // 
+            this.barDockControlRight.CausesValidation = false;
+            this.barDockControlRight.Dock = System.Windows.Forms.DockStyle.Right;
+            this.barDockControlRight.Location = new System.Drawing.Point(1117, 31);
+            this.barDockControlRight.Manager = this.barManager1;
+            this.barDockControlRight.Size = new System.Drawing.Size(0, 583);
+            // 
+            // bar3
+            // 
+            this.bar3.BarName = "Status bar";
+            this.bar3.DockCol = 0;
+            this.bar3.DockStyle = DevExpress.XtraBars.BarDockStyle.Bottom;
+            this.bar3.Text = "Status bar";
+            // 
+            // bar2
+            // 
+            this.bar2.BarName = "Main menu";
+            this.bar2.DockCol = 0;
+            this.bar2.DockStyle = DevExpress.XtraBars.BarDockStyle.Top;
+            this.bar2.Text = "Main menu";
+            // 
+            // bar1
+            // 
+            this.bar1.BarName = "Tools";
+            this.bar1.DockCol = 0;
+            this.bar1.DockStyle = DevExpress.XtraBars.BarDockStyle.Top;
+            this.bar1.Text = "Tools";
             // 
             // NewNoteForm
             // 
@@ -223,8 +348,13 @@ namespace Notes
             this.ClientSize = new System.Drawing.Size(1117, 614);
             this.ControlContainer = this.fluentDesignFormContainer1;
             this.Controls.Add(this.fluentDesignFormContainer1);
+            this.Controls.Add(this.barDockControlLeft);
+            this.Controls.Add(this.barDockControlRight);
+            this.Controls.Add(this.barDockControlBottom);
+            this.Controls.Add(this.barDockControlTop);
             this.Controls.Add(this.fluentDesignFormControl1);
             this.FluentDesignFormControl = this.fluentDesignFormControl1;
+            this.IconOptions.LargeImage = ((System.Drawing.Image)(resources.GetObject("NewNoteForm.IconOptions.LargeImage")));
             this.Name = "NewNoteForm";
             this.Text = "Notes";
             this.fluentDesignFormContainer1.ResumeLayout(false);
@@ -239,8 +369,11 @@ namespace Notes
             this.panelControl3.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.txtTitle.Properties)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.accordionCtlNotes)).EndInit();
+            this.mnuNotebook.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.fluentDesignFormControl1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.barManager1)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -260,5 +393,18 @@ namespace Notes
         private DevExpress.XtraEditors.LabelControl lblDate;
         private DevExpress.XtraBars.BarButtonItem btnDelete;
         private DevExpress.XtraBars.BarButtonItem btnHelp;
+        private DevExpress.XtraBars.BarButtonItem barButtonItem2;
+        private DevExpress.XtraBars.SkinDropDownButtonItem skinDropDownButtonItem1;
+        private DevExpress.XtraBars.BarDockControl barDockControlLeft;
+        private DevExpress.XtraBars.BarManager barManager1;
+        private DevExpress.XtraBars.BarDockControl barDockControlTop;
+        private DevExpress.XtraBars.BarDockControl barDockControlBottom;
+        private DevExpress.XtraBars.BarDockControl barDockControlRight;
+        private DevExpress.XtraBars.Bar bar3;
+        private DevExpress.XtraBars.Bar bar2;
+        private DevExpress.XtraBars.Bar bar1;
+        private System.Windows.Forms.ContextMenuStrip mnuNotebook;
+        private System.Windows.Forms.ToolStripMenuItem newNotebookToolStripMenuItem;
+        private System.Windows.Forms.ToolStripTextBox toolStripTextBox1;
     }
 }

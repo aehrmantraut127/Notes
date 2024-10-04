@@ -1,4 +1,5 @@
-﻿using DevExpress.XtraBars;
+﻿using DevExpress.LookAndFeel;
+using DevExpress.XtraBars;
 using DevExpress.XtraBars.Navigation;
 using System;
 using System.Collections.Generic;
@@ -22,35 +23,50 @@ namespace Notes
         public NewNoteForm()
         {
             InitializeComponent();
-            LoadNotes();
+            SqliteDataAccess.LoadNotes();
             AccordionControl();
             lblDate.Text = "";
+            this.FormClosing += NewNote_FormClosing;
         }
 
         /// <summary>
-        /// loads all notes
+        /// 
         /// </summary>
-        private void LoadNotes()
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void NewNote_FormClosing(object sender, FormClosingEventArgs e)
         {
-            notes = SqliteDataAccess.LoadNotes();
+            SavePalette();
         }
-
-        /// <summary>
-        /// saves notes by pulling the date from the computer. the title from the title bar, 
-        /// and the message, using rtf to preserve data, from the message box
-        /// </summary>
-        private void AddNote()
+        private void SavePalette()
         {
-            NoteModel n = new NoteModel
+            var settings = Properties.Settings.Default;
+            settings.SkinName = UserLookAndFeel.Default.SkinName;
+            settings.Palette = UserLookAndFeel.Default.ActiveSvgPaletteName;
+            settings.Save();
+        }
+        private void ShowSwatchPicker(Form owner)
+        {
+            using (var dialog = new DevExpress.Customization.SvgSkinPaletteSelector(owner))
             {
-                Title = txtTitle.Text
-            };
-
-            // Save the RTF content
-            SqliteDataAccess.SaveNote(n, txtMessage.RtfText); // Save the RTF content
-
-            txtMessage.RtfText = ""; // Clear the RichTextBox
-            txtTitle.Text = "";
+                dialog.ShowDialog();
+                SavePalette();
+            }
+        }
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            RestorePalette();
+        }
+        private void RestorePalette()
+        {
+            var settings = Properties.Settings.Default;
+            if (!string.IsNullOrEmpty(settings.SkinName))
+            {
+                if (!string.IsNullOrEmpty(settings.Palette))
+                    UserLookAndFeel.Default.SetSkinStyle(settings.SkinName, settings.Palette);
+                else UserLookAndFeel.Default.SetSkinStyle(settings.SkinName);
+            }
         }
 
         /// <summary>
@@ -74,7 +90,7 @@ namespace Notes
             }
             else
             {
-                // Clear existing items if needed (optional)
+                // Clear existing items if needed
                 notesGroup.Elements.Clear();
             }
 
@@ -178,7 +194,7 @@ namespace Notes
                 MessageBox.Show("No message found for the selected entry.");
             }
         }
-
+        
         /// <summary>
         /// allows for the creation of new notes to be saved into the database and reloaded into the accordion control
         /// </summary>
@@ -188,8 +204,18 @@ namespace Notes
         {
             if(!string.IsNullOrWhiteSpace(txtTitle.Text))
             {
-                AddNote();
-                LoadNotes();
+                NoteModel n = new NoteModel
+                {
+                    Title = txtTitle.Text
+                };
+
+                // Save the RTF content
+                SqliteDataAccess.SaveNote(n, txtMessage.RtfText); // Save the RTF content
+
+                txtMessage.RtfText = ""; // Clear the RichTextBox
+                txtTitle.Text = "";
+
+                SqliteDataAccess.LoadNotes();
                 lblDate.Text = "";
                 AccordionControl();
             }
@@ -225,7 +251,7 @@ namespace Notes
                 SqliteDataAccess.DeleteNote(selectedNote.title, selectedNote.date);
 
                 // Refresh the notes display
-                LoadNotes();
+                SqliteDataAccess.LoadNotes();
                 AccordionControl();
 
                 // Clear the selected note
@@ -263,5 +289,62 @@ namespace Notes
                 MessageBox.Show("Error loading help documentation: " + ex.Message);
             }
         }
+
+        private void barButtonItem2_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(selectedNote.title)) // Ensure a note is selected
+            {
+                NoteModel updatedNote = new NoteModel
+                {
+                    Title = txtTitle.Text,
+                };
+
+                // Update the note in the database using title and date from the selectedNote
+                SqliteDataAccess.UpdateNote(selectedNote.title, selectedNote.date, updatedNote.Title, txtMessage.RtfText);
+
+                // Clear fields or reset state as needed
+                txtMessage.RtfText = "";
+                txtTitle.Text = "";
+                lblDate.Text = "";
+
+                // Refresh the notes display
+                SqliteDataAccess.LoadNotes();
+                AccordionControl();
+                MessageBox.Show("Note updated successfully.");
+            }
+            else
+            {
+                MessageBox.Show("Please select a note to edit.");
+            }
+        }
+
+        private void toolStripTextBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            // save this to notebooks.db for later usage
+            // make selection stay 
+            if(e.KeyCode == Keys.Enter)
+            {
+                AccordionControlElement newGroup = accordionCtlNotes.Elements
+                .FirstOrDefault(x => x.Text == "Notes");
+
+                if (!string.IsNullOrWhiteSpace(toolStripTextBox1.Text))
+                {
+                    newGroup = new AccordionControlElement
+                    {
+                        Text = toolStripTextBox1.Text,
+                        Style = ElementStyle.Group
+                    };
+                }
+                accordionCtlNotes.Elements.Add(newGroup);
+
+                toolStripTextBox1.Text = "";
+            }
+        }
+
+        private void accordionCtlNotes_FilterContent(object sender, FilterContentEventArgs e)
+        {
+            // create filter content for search bar
+        }
+
     }
 }
