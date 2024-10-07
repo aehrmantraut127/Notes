@@ -52,6 +52,7 @@ namespace Notes
             this.newNotebookToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripTextBox1 = new System.Windows.Forms.ToolStripTextBox();
             this.accordionControlElementNewNote = new DevExpress.XtraBars.Navigation.AccordionControlElement();
+            this.notebookModelBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.fluentDesignFormControl1 = new DevExpress.XtraBars.FluentDesignSystem.FluentDesignFormControl();
             this.barManager1 = new DevExpress.XtraBars.BarManager(this.components);
             this.barDockControlTop = new DevExpress.XtraBars.BarDockControl();
@@ -61,6 +62,7 @@ namespace Notes
             this.bar3 = new DevExpress.XtraBars.Bar();
             this.bar2 = new DevExpress.XtraBars.Bar();
             this.bar1 = new DevExpress.XtraBars.Bar();
+            this.barButtonItem3 = new DevExpress.XtraBars.BarButtonItem();
             this.fluentDesignFormContainer1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.panelControl2)).BeginInit();
             this.panelControl2.SuspendLayout();
@@ -72,6 +74,7 @@ namespace Notes
             ((System.ComponentModel.ISupportInitialize)(this.txtTitle.Properties)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.accordionCtlNotes)).BeginInit();
             this.mnuNotebook.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.notebookModelBindingSource)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.fluentDesignFormControl1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.barManager1)).BeginInit();
             this.SuspendLayout();
@@ -115,8 +118,9 @@ namespace Notes
             this.btnDelete,
             this.btnHelp,
             this.barButtonItem2,
-            this.skinDropDownButtonItem1});
-            this.fluentFormDefaultManager1.MaxItemId = 6;
+            this.skinDropDownButtonItem1,
+            this.barButtonItem3});
+            this.fluentFormDefaultManager1.MaxItemId = 7;
             // 
             // barButtonItem1
             // 
@@ -171,9 +175,9 @@ namespace Notes
             this.panelControl3.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
             this.panelControl3.Controls.Add(this.lblDate);
             this.panelControl3.Dock = System.Windows.Forms.DockStyle.Right;
-            this.panelControl3.Location = new System.Drawing.Point(615, 12);
+            this.panelControl3.Location = new System.Drawing.Point(673, 12);
             this.panelControl3.Name = "panelControl3";
-            this.panelControl3.Size = new System.Drawing.Size(140, 34);
+            this.panelControl3.Size = new System.Drawing.Size(82, 34);
             this.panelControl3.TabIndex = 2;
             // 
             // lblDate
@@ -183,9 +187,9 @@ namespace Notes
             this.lblDate.Appearance.Options.UseFont = true;
             this.lblDate.Location = new System.Drawing.Point(3, 8);
             this.lblDate.Name = "lblDate";
-            this.lblDate.Size = new System.Drawing.Size(21, 16);
+            this.lblDate.Size = new System.Drawing.Size(66, 16);
             this.lblDate.TabIndex = 0;
-            this.lblDate.Text = "test";
+            this.lblDate.Text = "2024-06-07";
             // 
             // btnComplete
             // 
@@ -208,7 +212,7 @@ namespace Notes
             this.txtTitle.Name = "txtTitle";
             this.txtTitle.Properties.Appearance.Font = new System.Drawing.Font("Tahoma", 16F);
             this.txtTitle.Properties.Appearance.Options.UseFont = true;
-            this.txtTitle.Size = new System.Drawing.Size(597, 32);
+            this.txtTitle.Size = new System.Drawing.Size(655, 32);
             this.txtTitle.TabIndex = 0;
             // 
             // accordionCtlNotes
@@ -260,6 +264,10 @@ namespace Notes
             this.accordionControlElementNewNote.Text = "New Note";
             this.accordionControlElementNewNote.Click += new System.EventHandler(this.accordionControlElementNewNote_Click);
             // 
+            // notebookModelBindingSource
+            // 
+            this.notebookModelBindingSource.DataSource = typeof(Notes.NotebookModel);
+            // 
             // fluentDesignFormControl1
             // 
             this.fluentDesignFormControl1.FluentDesignForm = this;
@@ -268,7 +276,8 @@ namespace Notes
             this.btnDelete,
             this.btnHelp,
             this.barButtonItem2,
-            this.skinDropDownButtonItem1});
+            this.skinDropDownButtonItem1,
+            this.barButtonItem3});
             this.fluentDesignFormControl1.Location = new System.Drawing.Point(0, 0);
             this.fluentDesignFormControl1.Manager = this.fluentFormDefaultManager1;
             this.fluentDesignFormControl1.Name = "fluentDesignFormControl1";
@@ -279,6 +288,7 @@ namespace Notes
             this.fluentDesignFormControl1.TitleItemLinks.Add(this.btnHelp, true);
             this.fluentDesignFormControl1.TitleItemLinks.Add(this.barButtonItem2, true);
             this.fluentDesignFormControl1.TitleItemLinks.Add(this.skinDropDownButtonItem1, true);
+            this.fluentDesignFormControl1.TitleItemLinks.Add(this.barButtonItem3);
             // 
             // barManager1
             // 
@@ -341,6 +351,14 @@ namespace Notes
             this.bar1.DockStyle = DevExpress.XtraBars.BarDockStyle.Top;
             this.bar1.Text = "Tools";
             // 
+            // barButtonItem3
+            // 
+            this.barButtonItem3.Alignment = DevExpress.XtraBars.BarItemLinkAlignment.Right;
+            this.barButtonItem3.Caption = "Start New Note";
+            this.barButtonItem3.Id = 6;
+            this.barButtonItem3.Name = "barButtonItem3";
+            this.barButtonItem3.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.barButtonItem3_ItemClick);
+            // 
             // NewNoteForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -370,6 +388,7 @@ namespace Notes
             ((System.ComponentModel.ISupportInitialize)(this.txtTitle.Properties)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.accordionCtlNotes)).EndInit();
             this.mnuNotebook.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.notebookModelBindingSource)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.fluentDesignFormControl1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.barManager1)).EndInit();
             this.ResumeLayout(false);
@@ -406,5 +425,7 @@ namespace Notes
         private System.Windows.Forms.ContextMenuStrip mnuNotebook;
         private System.Windows.Forms.ToolStripMenuItem newNotebookToolStripMenuItem;
         private System.Windows.Forms.ToolStripTextBox toolStripTextBox1;
+        private System.Windows.Forms.BindingSource notebookModelBindingSource;
+        private DevExpress.XtraBars.BarButtonItem barButtonItem3;
     }
 }

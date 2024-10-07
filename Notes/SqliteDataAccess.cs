@@ -13,6 +13,73 @@ namespace Notes
     public class SqliteDataAccess
     {
         /// <summary>
+        /// Loads all notebooks from the database.
+        /// </summary>
+        /// <returns>A list of notebook names.</returns>
+        public static List<NotebookModel> LoadNotebooks()
+        {
+            var notebooks = new List<NotebookModel>();
+
+            using (IDbConnection cnn = new SQLiteConnection(LoadConnectionString()))
+            {
+                cnn.Open();
+                using (var command = new SQLiteCommand("SELECT notebookID, name FROM notebooks", (SQLiteConnection)cnn))
+                {
+                    using (SQLiteDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var notebook = new NotebookModel
+                            {
+                                notebookID = reader.GetInt32(0), 
+                                name = reader.GetString(1) 
+                            };
+                            notebooks.Add(notebook);
+                        }
+                    }
+                }
+            }
+
+            return notebooks;
+        }
+
+        /// <summary>
+        /// Saves a new notebook to the database.
+        /// </summary>
+        /// <param name="name">The name of the notebook.</param>
+        public static void SaveNotebook(string name)
+        {
+            using (IDbConnection cnn = new SQLiteConnection(LoadConnectionString()))
+            {
+                cnn.Open();
+                using (var command = new SQLiteCommand("INSERT INTO notebooks (name) VALUES (@name)", (SQLiteConnection)cnn))
+                {
+                    command.Parameters.AddWithValue("@name", name);
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deletes a notebook from the database.
+        /// </summary>
+        /// <param name="name">The name of the notebook.</param>
+        public static void DeleteNotebook(string name)
+        {
+            using (IDbConnection cnn = new SQLiteConnection(LoadConnectionString()))
+            {
+                cnn.Open();
+                string query = "DELETE FROM notebooks WHERE name = @name";
+
+                using (var cmd = new SQLiteCommand(query, (SQLiteConnection)cnn))
+                {
+                    cmd.Parameters.AddWithValue("@name", name);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        /// <summary>
         /// Works with SQLite to load all records from the database
         /// </summary>
         /// <returns></returns>
@@ -49,16 +116,17 @@ namespace Notes
         /// </summary>
         /// <param name="note"></param>
         /// <param name="rtfContent"></param>
-        public static void SaveNote(NoteModel note, string rtfContent)
+        public static void SaveNote(NoteModel note, string rtfContent, int notebookId)
         {
             using (IDbConnection cnn = new SQLiteConnection(LoadConnectionString()))
             {
                 cnn.Open();
-                using (var command = new SQLiteCommand("INSERT INTO messages (title, date, message) VALUES (@title, @date, @message)", (SQLiteConnection)cnn))
+                using (var command = new SQLiteCommand("INSERT INTO messages (title, date, message, notebook_id) VALUES (@title, @date, @message, @notebook_id)", (SQLiteConnection)cnn))
                 {
                     command.Parameters.AddWithValue("@title", note.Title);
                     command.Parameters.AddWithValue("@date", DateTime.Now);
                     command.Parameters.AddWithValue("@message", System.Text.Encoding.UTF8.GetBytes(rtfContent)); // Convert RTF string to byte array
+                    command.Parameters.AddWithValue("@notebook_id", notebookId);
                     command.ExecuteNonQuery();
                 }
             }

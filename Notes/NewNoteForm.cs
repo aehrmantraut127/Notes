@@ -19,10 +19,12 @@ namespace Notes
         List<NoteModel> notes = new List<NoteModel>();
         private Dictionary<(string title, DateTime date), byte[]> noteMessages = new Dictionary<(string title, DateTime date), byte[]>();
         private (string title, DateTime date) selectedNote;
+        private int selectedNotebook = -1;
 
         public NewNoteForm()
         {
             InitializeComponent();
+            SqliteDataAccess.LoadNotebooks();
             SqliteDataAccess.LoadNotes();
             AccordionControl();
             lblDate.Text = "";
@@ -45,14 +47,7 @@ namespace Notes
             settings.Palette = UserLookAndFeel.Default.ActiveSvgPaletteName;
             settings.Save();
         }
-        private void ShowSwatchPicker(Form owner)
-        {
-            using (var dialog = new DevExpress.Customization.SvgSkinPaletteSelector(owner))
-            {
-                dialog.ShowDialog();
-                SavePalette();
-            }
-        }
+        
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
@@ -73,106 +68,123 @@ namespace Notes
         /// all controls for the accordion control (left side of the app)
         /// </summary>
         private void AccordionControl()
-        {
-            // Check if the "Notes" group already exists
-            AccordionControlElement notesGroup = accordionCtlNotes.Elements
-                .FirstOrDefault(e => e.Text == "Notes");
+        {            
+            accordionCtlNotes.Elements.Clear();
 
-            // If it doesn't exist, create it
-            if (notesGroup == null)
-            {
-                notesGroup = new AccordionControlElement
-                {
-                    Text = "Notes",
-                    Style = ElementStyle.Group
-                };
-                accordionCtlNotes.Elements.Add(notesGroup);
-            }
-            else
-            {
-                // Clear existing items if needed
-                notesGroup.Elements.Clear();
-            }
-
-            string query = "SELECT title, date, message FROM messages"; // Include message column
-            Dictionary<string, List<DateTime>> noteEntries = new Dictionary<string, List<DateTime>>();
+            // Load Notebooks
+            string notebookQuery = "SELECT notebookID, name FROM notebooks";
 
             using (IDbConnection cnn = new SQLiteConnection(SqliteDataAccess.LoadConnectionString()))
             {
                 cnn.Open(); // Open the connection
-                using (SQLiteCommand command = new SQLiteCommand(query, (SQLiteConnection)cnn))
+                using (SQLiteCommand command = new SQLiteCommand(notebookQuery, (SQLiteConnection)cnn))
                 {
                     using (SQLiteDataReader reader = command.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            string title = reader.GetString(0);
-                            DateTime date = reader.GetDateTime(1); // Adjust based on your column type
-                            string message = reader.GetString(2); // Retrieve message
+                            int notebookId = reader.GetInt32(0);
+                            string notebookName = reader.GetString(1);
 
-                            if (!noteEntries.ContainsKey(title))
+                            // Create an AccordionControlElement for each notebook as a group
+                            AccordionControlElement notebookGroup = new AccordionControlElement
                             {
-                                noteEntries[title] = new List<DateTime>();
+                                Text = notebookName,
+                                Style = ElementStyle.Group
+                            };
+
+                            notebookGroup.Click += (s, e) => OnNotebookSelected(notebookId);
+
+                            // Add the notebook group to the accordion control
+                            accordionCtlNotes.Elements.Add(notebookGroup);
+
+                            // Load notes for this specific notebook
+                            string notesQuery = "SELECT title, date, message FROM messages WHERE notebook_id = @notebookId";
+                            using (SQLiteCommand notesCommand = new SQLiteCommand(notesQuery, (SQLiteConnection)cnn))
+                            {
+                                notesCommand.Parameters.AddWithValue("@notebookId", notebookId);
+
+                                using (SQLiteDataReader notesReader = notesCommand.ExecuteReader())
+                                {
+                                    // Check if we have notes for this notebook
+                                    Dictionary<string, List<DateTime>> noteEntries = new Dictionary<string, List<DateTime>>();
+
+                                    while (notesReader.Read())
+                                    {
+                                        // Ensure there is a title and date
+                                        if (!notesReader.IsDBNull(0) && !notesReader.IsDBNull(1))
+                                        {
+                                            string title = notesReader.GetString(0);
+                                            DateTime date = notesReader.GetDateTime(1); // Adjust based on your column type
+                                            string message = notesReader.GetString(2); // Retrieve message
+
+                                            // Store the message along with the title and date in a separate dictionary
+                                            noteMessages[(title, date)] = System.Text.Encoding.UTF8.GetBytes(message);
+
+                                            // Ensure that the title is unique in the noteEntries
+                                            if (!noteEntries.ContainsKey(title))
+                                            {
+                                                noteEntries[title] = new List<DateTime>();
+                                            }
+                                            noteEntries[title].Add(date);
+                                        }
+                                    }
+
+                                    // Add entries to the accordion under the current notebook group
+                                    foreach (var entry in noteEntries)
+                                    {
+                                        if (entry.Value.Count > 1)
+                                        {
+                                            // Create a subgroup for titles with multiple entries
+                                            AccordionControlElement titleGroup = new AccordionControlElement
+                                            {
+                                                Text = entry.Key,
+                                                Style = ElementStyle.Group
+                                            };
+
+                                            // Add the title group to the notebook group
+                                            notebookGroup.Elements.Add(titleGroup);
+
+                                            // Sort dates before adding them
+                                            entry.Value.Sort();
+
+                                            // Add date options as sub-items
+                                            foreach (var date in entry.Value)
+                                            {
+                                                AccordionControlElement dateItem = new AccordionControlElement
+                                                {
+                                                    Text = date.ToString("yyyy-MM-dd"), // Format as needed
+                                                    Style = ElementStyle.Item
+                                                };
+
+                                                // Add event handler for date selection
+                                                dateItem.Click += (s, e) => OnNoteItemClick(entry.Key, date);
+
+                                                titleGroup.Elements.Add(dateItem);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // For unique entries, add them as standalone items
+                                            AccordionControlElement uniqueItem = new AccordionControlElement
+                                            {
+                                                Text = entry.Key,
+                                                Style = ElementStyle.Item
+                                            };
+
+                                            // Add event handler for unique entry selection
+                                            uniqueItem.Click += (s, e) => OnNoteItemClick(entry.Key, entry.Value[0]);
+                                            notebookGroup.Elements.Add(uniqueItem);
+                                        }
+                                    }
+                                }
                             }
-
-                            noteEntries[title].Add(date);
-
-                            // Store the message along with the title and date in a separate dictionary
-                            noteMessages[(title, date)] = System.Text.Encoding.UTF8.GetBytes(message);
                         }
                     }
                 }
             }
-
-            // Add entries to the accordion
-            foreach (var entry in noteEntries)
-            {
-                if (entry.Value.Count > 1)
-                {
-                    // Create a subgroup for titles with multiple entries
-                    AccordionControlElement titleGroup = new AccordionControlElement
-                    {
-                        Text = entry.Key,
-                        Style = ElementStyle.Group
-                    };
-
-                    // Add the title group to the notes group
-                    notesGroup.Elements.Add(titleGroup);
-
-                    // Sort dates before adding them
-                    entry.Value.Sort();
-
-                    // Add date options as sub-items
-                    foreach (var date in entry.Value)
-                    {
-                        AccordionControlElement dateItem = new AccordionControlElement
-                        {
-                            Text = date.ToString("yyyy-MM-dd"), // Format as needed
-                            Style = ElementStyle.Item
-                        };
-
-                        // Add event handler for date selection
-                        dateItem.Click += (s, e) => OnNoteItemClick(entry.Key, date);
-
-                        titleGroup.Elements.Add(dateItem);
-                    }
-                }
-                else
-                {
-                    // For unique entries, add them as standalone items
-                    AccordionControlElement uniqueItem = new AccordionControlElement
-                    {
-                        Text = entry.Key,
-                        Style = ElementStyle.Item
-                    };
-
-                    // Add event handler for unique entry selection
-                    uniqueItem.Click += (s, e) => OnNoteItemClick(entry.Key, entry.Value[0]);
-
-                    notesGroup.Elements.Add(uniqueItem);
-                }
-            }
         }
+
 
         /// <summary>
         /// saves data temporarily that you selected from the accordion control
@@ -194,7 +206,16 @@ namespace Notes
                 MessageBox.Show("No message found for the selected entry.");
             }
         }
-        
+
+        /// <summary>
+        /// Used to select notebooks to insert notes into
+        /// </summary>
+        /// <param name="notebookId"></param>
+        private void OnNotebookSelected(int notebookId)
+        {
+            selectedNotebook = notebookId; // Store the selected notebook ID
+        }
+
         /// <summary>
         /// allows for the creation of new notes to be saved into the database and reloaded into the accordion control
         /// </summary>
@@ -202,19 +223,28 @@ namespace Notes
         /// <param name="e"></param>
         private void btnComplete_Click(object sender, EventArgs e)
         {
-            if(!string.IsNullOrWhiteSpace(txtTitle.Text))
+            if (!string.IsNullOrWhiteSpace(txtTitle.Text))
             {
+                if (selectedNotebook == -1) // Check if a notebook has been selected
+                {
+                    MessageBox.Show("Please select a notebook before saving the note.");
+                    return; // Exit early if no notebook is selected
+                }
+
                 NoteModel n = new NoteModel
                 {
                     Title = txtTitle.Text
                 };
 
-                // Save the RTF content
-                SqliteDataAccess.SaveNote(n, txtMessage.RtfText); // Save the RTF content
+                // Use the selected notebook ID to save the note
+                SqliteDataAccess.SaveNote(n, txtMessage.RtfText, selectedNotebook);
 
-                txtMessage.RtfText = ""; // Clear the RichTextBox
+                // Clear the UI fields after saving
+                txtMessage.RtfText = "";
                 txtTitle.Text = "";
+                lblDate.Text = "";
 
+                // Refresh the notes display
                 SqliteDataAccess.LoadNotes();
                 lblDate.Text = "";
                 AccordionControl();
@@ -223,8 +253,9 @@ namespace Notes
             {
                 MessageBox.Show("Please complete your note.");
             }
-            
         }
+
+
 
         /// <summary>
         /// clears fields to allow for the creation of new notes
@@ -334,10 +365,13 @@ namespace Notes
                         Text = toolStripTextBox1.Text,
                         Style = ElementStyle.Group
                     };
+                    SqliteDataAccess.SaveNotebook(toolStripTextBox1.Text);
                 }
                 accordionCtlNotes.Elements.Add(newGroup);
 
                 toolStripTextBox1.Text = "";
+
+                SqliteDataAccess.LoadNotebooks();
             }
         }
 
@@ -346,5 +380,11 @@ namespace Notes
             // create filter content for search bar
         }
 
+        private void barButtonItem3_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            txtMessage.Text = "";
+            txtTitle.Text = "";
+            lblDate.Text = "";
+        }
     }
 }
