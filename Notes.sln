@@ -5,16 +5,21 @@ VisualStudioVersion = 16.0.35229.62
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Notes", "Notes\Notes.csproj", "{BC639F7D-87E4-4C02-BA7C-313C8D685A4D}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Notes App", "Notes App\Notes App.vdproj", "{2BFAF13E-4DAB-4165-9EFF-C5BFD09DFCF7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{BC639F7D-87E4-4C02-BA7C-313C8D685A4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BC639F7D-87E4-4C02-BA7C-313C8D685A4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC639F7D-87E4-4C02-BA7C-313C8D685A4D}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{BC639F7D-87E4-4C02-BA7C-313C8D685A4D}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{BC639F7D-87E4-4C02-BA7C-313C8D685A4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BC639F7D-87E4-4C02-BA7C-313C8D685A4D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BFAF13E-4DAB-4165-9EFF-C5BFD09DFCF7}.Debug|Any CPU.ActiveCfg = Debug
+		{2BFAF13E-4DAB-4165-9EFF-C5BFD09DFCF7}.Release|Any CPU.ActiveCfg = Release
+		{2BFAF13E-4DAB-4165-9EFF-C5BFD09DFCF7}.Release|Any CPU.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
