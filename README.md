@@ -7,7 +7,9 @@ This application allows users to create, view, and manage notes. The notes can c
 * **Create Notes:** Add new notes with titles and rich text content.
 * **View Notes:** Browse through existing notes organized by titles and dates.
 * **Delete Notes:** Remove notes that are no longer needed.
+* **Update Notes:** Edit notes that need to be changed.
 * **Help Documentation:** Access a help document for guidance.
+* **Theme Selection:** Switch your theme to match your needs. 
 
 ## Installation
 After beta, to download:
