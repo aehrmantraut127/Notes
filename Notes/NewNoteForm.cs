@@ -15,7 +15,12 @@ namespace Notes
 {
     public partial class NewNoteForm : DevExpress.XtraBars.FluentDesignSystem.FluentDesignForm
     {
-        // all temp variables used
+        /// <summary>
+        /// Creation of a NoteModel for easier storage and transportation of temp data
+        /// dictionary to easily display the message with the notes title and date linking to the message
+        /// tuple of our selected note for tracking what to update/delete
+        /// your selected notebook id to know where to send a note
+        /// </summary>
         List<NoteModel> notes = new List<NoteModel>();
         private Dictionary<(string title, DateTime date), byte[]> noteMessages = new Dictionary<(string title, DateTime date), byte[]>();
         private (string title, DateTime date) selectedNote;
@@ -28,32 +33,27 @@ namespace Notes
             SqliteDataAccess.LoadNotes();
             AccordionControl();
             lblDate.Text = "";
-            this.FormClosing += NewNote_FormClosing;
+            this.FormClosing += NewNoteForm_FormClosing;
+            this.Load += NewNoteForm_Load;
         }
 
         /// <summary>
-        /// 
+        /// Theme selection and saving handlers
+        /// override allows for the user saving their selected them on launch
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void NewNote_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            SavePalette();
-        }
-        private void SavePalette()
+        private void SavePalette() // saves the selected theme
         {
             var settings = Properties.Settings.Default;
             settings.SkinName = UserLookAndFeel.Default.SkinName;
             settings.Palette = UserLookAndFeel.Default.ActiveSvgPaletteName;
             settings.Save();
         }
-        
-        protected override void OnShown(EventArgs e)
+        protected override void OnShown(EventArgs e) // on launch, overrides default theme with user selected theme
         {
             base.OnShown(e);
             RestorePalette();
         }
-        private void RestorePalette()
+        private void RestorePalette() // handles reskinning of app
         {
             var settings = Properties.Settings.Default;
             if (!string.IsNullOrEmpty(settings.SkinName))
@@ -63,9 +63,171 @@ namespace Notes
                 else UserLookAndFeel.Default.SetSkinStyle(settings.SkinName);
             }
         }
+        private void NewNoteForm_FormClosing(object sender, FormClosingEventArgs e) // saves note and palette before closing
+        {
+            SavePalette();
+        }
+        private void NewNoteForm_Load(object sender, EventArgs e)
+        {
+            NoteModel lastNote = SqliteDataAccess.GetLastNote();
+            if (lastNote != null)
+            {
+                txtTitle.Text = lastNote.Title;
+                txtMessage.RtfText = lastNote.Message; // Assuming this property exists
+            }
+        }
+
+
 
         /// <summary>
-        /// all controls for the accordion control (left side of the app)
+        /// Helper Methods
+        /// </summary>
+        private void ClearFields() // Clears all form fields
+        {
+            txtMessage.Text = "";
+            txtTitle.Text = "";
+            lblDate.Text = "";
+            selectedNote = ("", DateTime.MinValue);
+        } 
+        private void Updater()
+        {
+            if (!string.IsNullOrWhiteSpace(selectedNote.title)) // Ensure a note is selected
+            {
+                if (!string.IsNullOrWhiteSpace(txtTitle.Text))
+                {
+                    NoteModel updatedNote = new NoteModel
+                    {
+                        Title = txtTitle.Text,
+                    };
+
+                    // Update the note in the database using title and date from the selectedNote
+                    SqliteDataAccess.UpdateNote(selectedNote.title, selectedNote.date, updatedNote.Title, txtMessage.RtfText);
+
+                    ClearFields();
+
+                    // Refresh the notes display
+                    SqliteDataAccess.LoadNotes();
+                    AccordionControl();
+                    MessageBox.Show("Note updated successfully.");
+                }
+                else
+                {
+                    MessageBox.Show("Please complete your note.");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please select a note to edit.");
+            }
+        }
+        /**
+        * ADD FUNCTIONALITY:
+        * 
+        * auto update selected note
+        * auto add new note
+        * 
+        * localize notes.db in appdata
+        */
+
+
+
+        /// <summary>
+        /// All button functionality
+        /// </summary>
+        private void ACTLNewNote_ItemClick(object sender, EventArgs e) // new note selection, located on the accordion control section
+        {
+            ClearFields();
+        }
+        private void btnNewNote_ItemClick(object sender, ItemClickEventArgs e) // new note selection, located on the menu bar
+        {
+            ClearFields();
+        }
+        private void btnUpdateNote_ItemClick(object sender, ItemClickEventArgs e) // update current note selection, located on the menu bar
+        {
+            Updater();
+        }
+        private void btnDelete_ItemClick(object sender, ItemClickEventArgs e) // delete current note selection, located on the menu bar
+        {
+            DialogResult dialogResult = MessageBox.Show("Are you sure you want to delete this notebook and all notes within?", "Delete Notebook?", MessageBoxButtons.YesNo);
+            if (dialogResult == DialogResult.Yes)
+            {
+                if (selectedNotebook != -1)
+                {
+                    // Call your data access method to delete the note
+                    SqliteDataAccess.DeleteNotebook(selectedNotebook);
+
+                    // Refresh the notes display
+                    SqliteDataAccess.LoadNotebooks();
+                    SqliteDataAccess.LoadNotes();
+                    AccordionControl();
+
+                    // Clear the selected note
+                    selectedNotebook = -1;
+                    ClearFields();
+                    MessageBox.Show("Notebook deleted successfully.");
+                }
+                else
+                {
+                    MessageBox.Show("Please select a notebook to delete.");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Deletion Canceled.");
+            }
+        }
+        private void btnHelp_ItemClick(object sender, ItemClickEventArgs e) // displays help menu, located on the menu bar
+        {
+            try
+            {
+                // Assuming your RTF file is named "Help.rtf" and located in the root folder
+                string filePath = @".\Help.rtf";
+
+                // Load the RTF file into the RichTextBox with Help in the title TextBox
+                txtTitle.Text = "Help";
+                lblDate.Text = "";
+                txtMessage.LoadDocument(filePath);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error loading help documentation: " + ex.Message);
+            }
+        }
+        private void btnComplete_Click(object sender, EventArgs e) // saves the note to the database with selected notebook, located on the main form
+        {
+            if (!string.IsNullOrWhiteSpace(txtTitle.Text))
+            {
+                if (selectedNotebook == -1) // Check if a notebook has been selected
+                {
+                    MessageBox.Show("Please select a notebook before saving the note.");
+                    return; // Exit early if no notebook is selected
+                }
+
+                NoteModel n = new NoteModel
+                {
+                    Title = txtTitle.Text
+                };
+
+                // Use the selected notebook ID to save the note
+                SqliteDataAccess.SaveNote(n, txtMessage.RtfText, selectedNotebook);
+
+                ClearFields();
+
+                // Refresh the notes display
+                SqliteDataAccess.LoadNotes();
+                lblDate.Text = "";
+                AccordionControl();
+            }
+            else
+            {
+                MessageBox.Show("Please complete your note.");
+            }
+        }
+
+
+
+        /// <summary>
+        /// all controls for the accordion control
         /// </summary>
         private void AccordionControl()
         {            
@@ -88,18 +250,24 @@ namespace Notes
 
                             // Create an AccordionControlElement for each notebook as a group
                             AccordionControlElement notebookGroup = new AccordionControlElement
-                            {
+                            { 
                                 Text = notebookName,
-                                Style = ElementStyle.Group
+                                Style = ElementStyle.Group,
+                                Expanded = true,
+                                
                             };
-
-                            notebookGroup.Click += (s, e) => OnNotebookSelected(notebookId);
+                            
+                            notebookGroup.Click += (s, e) =>
+                            {
+                                OnNotebookSelected(notebookId);
+                                //mnuNotebook.Show(MousePosition);
+                            };
 
                             // Add the notebook group to the accordion control
                             accordionCtlNotes.Elements.Add(notebookGroup);
 
                             // Load notes for this specific notebook
-                            string notesQuery = "SELECT title, date, message FROM messages WHERE notebook_id = @notebookId";
+                            string notesQuery = "SELECT title, date, message FROM messages WHERE notebook_id = @notebookId AND archived = 0";
                             using (SQLiteCommand notesCommand = new SQLiteCommand(notesQuery, (SQLiteConnection)cnn))
                             {
                                 notesCommand.Parameters.AddWithValue("@notebookId", notebookId);
@@ -184,20 +352,13 @@ namespace Notes
                 }
             }
         }
-
-
-        /// <summary>
-        /// saves data temporarily that you selected from the accordion control
-        /// </summary>
-        /// <param name="title"></param>
-        /// <param name="date"></param>
-        private void OnNoteItemClick(string title, DateTime date)
+        private void OnNoteItemClick(string title, DateTime date) // handles the selection of notes from the accordion control
         {
             if (noteMessages.TryGetValue((title, date), out byte[] rtfData))
             {
                 txtTitle.Text = title;
                 lblDate.Text = date.ToString("yyyy-MM-dd");
-                txtMessage.RtfText = System.Text.Encoding.UTF8.GetString(rtfData); // Load RTF data into RichTextBox
+                txtMessage.RtfText = System.Text.Encoding.UTF8.GetString(rtfData); 
 
                 selectedNote = (title, date);
             }
@@ -206,185 +367,201 @@ namespace Notes
                 MessageBox.Show("No message found for the selected entry.");
             }
         }
-
-        /// <summary>
-        /// Used to select notebooks to insert notes into
-        /// </summary>
-        /// <param name="notebookId"></param>
-        private void OnNotebookSelected(int notebookId)
+        private void OnNotebookSelected(int notebookId) // handles the selection of notebooks from the accordion control *ERROR* saves infinetly 
         {
             selectedNotebook = notebookId; // Store the selected notebook ID
         }
-
-        /// <summary>
-        /// allows for the creation of new notes to be saved into the database and reloaded into the accordion control
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btnComplete_Click(object sender, EventArgs e)
+        private void accordionCtlNotes_FilterContent(object sender, FilterContentEventArgs e) // Filter notes using metadata, search bar on accordion control
         {
-            if (!string.IsNullOrWhiteSpace(txtTitle.Text))
-            {
-                if (selectedNotebook == -1) // Check if a notebook has been selected
-                {
-                    MessageBox.Show("Please select a notebook before saving the note.");
-                    return; // Exit early if no notebook is selected
-                }
-
-                NoteModel n = new NoteModel
-                {
-                    Title = txtTitle.Text
-                };
-
-                // Use the selected notebook ID to save the note
-                SqliteDataAccess.SaveNote(n, txtMessage.RtfText, selectedNotebook);
-
-                // Clear the UI fields after saving
-                txtMessage.RtfText = "";
-                txtTitle.Text = "";
-                lblDate.Text = "";
-
-                // Refresh the notes display
-                SqliteDataAccess.LoadNotes();
-                lblDate.Text = "";
-                AccordionControl();
-            }
-            else
-            {
-                MessageBox.Show("Please complete your note.");
-            }
+            // create filter content for search bar
+        }
+        private void accordionCtlNotes_DragDrop(object sender, DragEventArgs e)
+        {
+            OnNotebookSelected(selectedNotebook);
+            SqliteDataAccess.UpdateNoteInNotebook(selectedNotebook, selectedNote.title, selectedNote.date);
+            // Refresh the notes display
+            SqliteDataAccess.LoadNotes();
+            AccordionControl();
         }
 
 
 
         /// <summary>
-        /// clears fields to allow for the creation of new notes
+        /// Context menu for the accordion control
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void accordionControlElementNewNote_Click(object sender, EventArgs e)
+        private void txtNewNotebook_KeyDown(object sender, KeyEventArgs e) // context menu for new notebook creation in the accordion control
         {
-            txtMessage.Text = "";
-            txtTitle.Text = "";
-            lblDate.Text = "";
-        }
-
-        /// <summary>
-        /// allows for you to delete records from the database
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btnDelete_ItemClick(object sender, ItemClickEventArgs e)
-        {
-            if (!string.IsNullOrEmpty(selectedNote.title))
-            {
-                // Call your data access method to delete the note
-                SqliteDataAccess.DeleteNote(selectedNote.title, selectedNote.date);
-
-                // Refresh the notes display
-                SqliteDataAccess.LoadNotes();
-                AccordionControl();
-
-                // Clear the selected note
-                selectedNote = (null, DateTime.MinValue);
-                txtMessage.Text = "";
-                txtTitle.Text = "";
-                lblDate.Text = "";
-                MessageBox.Show("Note deleted successfully.");
-            }
-            else
-            {
-                MessageBox.Show("Please select a note to delete.");
-            }
-        }
-
-        /// <summary>
-        /// opens the help documentation into the main page
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btnHelp_ItemClick(object sender, ItemClickEventArgs e)
-        {
-            try
-            {
-                // Assuming your RTF file is named "HelpDocument.rtf" and located in a folder named "Resources"
-                string filePath = @".\Help.rtf"; // Adjust the path as necessary
-
-                // Load the RTF file into the RichTextBox
-                txtTitle.Text = "Help";
-                lblDate.Text = "";
-                txtMessage.LoadDocument(filePath);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error loading help documentation: " + ex.Message);
-            }
-        }
-
-        private void barButtonItem2_ItemClick(object sender, ItemClickEventArgs e)
-        {
-            if (!string.IsNullOrWhiteSpace(selectedNote.title)) // Ensure a note is selected
-            {
-                NoteModel updatedNote = new NoteModel
-                {
-                    Title = txtTitle.Text,
-                };
-
-                // Update the note in the database using title and date from the selectedNote
-                SqliteDataAccess.UpdateNote(selectedNote.title, selectedNote.date, updatedNote.Title, txtMessage.RtfText);
-
-                // Clear fields or reset state as needed
-                txtMessage.RtfText = "";
-                txtTitle.Text = "";
-                lblDate.Text = "";
-
-                // Refresh the notes display
-                SqliteDataAccess.LoadNotes();
-                AccordionControl();
-                MessageBox.Show("Note updated successfully.");
-            }
-            else
-            {
-                MessageBox.Show("Please select a note to edit.");
-            }
-        }
-
-        private void toolStripTextBox1_KeyDown(object sender, KeyEventArgs e)
-        {
-            // save this to notebooks.db for later usage
-            // make selection stay 
-            if(e.KeyCode == Keys.Enter)
+            if (e.KeyCode == Keys.Enter)
             {
                 AccordionControlElement newGroup = accordionCtlNotes.Elements
                 .FirstOrDefault(x => x.Text == "Notes");
 
-                if (!string.IsNullOrWhiteSpace(toolStripTextBox1.Text))
+                if (!string.IsNullOrWhiteSpace(txtNewNotebook.Text))
                 {
                     newGroup = new AccordionControlElement
                     {
-                        Text = toolStripTextBox1.Text,
+                        Text = txtNewNotebook.Text,
                         Style = ElementStyle.Group
                     };
-                    SqliteDataAccess.SaveNotebook(toolStripTextBox1.Text);
+                    SqliteDataAccess.SaveNotebook(txtNewNotebook.Text);
                 }
                 accordionCtlNotes.Elements.Add(newGroup);
-
-                toolStripTextBox1.Text = "";
+                OnNotebookSelected(accordionCtlNotes.Elements.IndexOf(newGroup));
+                txtNewNotebook.Text = "";
 
                 SqliteDataAccess.LoadNotebooks();
             }
         }
-
-        private void accordionCtlNotes_FilterContent(object sender, FilterContentEventArgs e)
+        private void mnuDeleteNotebook_Click(object sender, EventArgs e) // context menu for deleting a notebook
         {
-            // create filter content for search bar
+            DialogResult dialogResult = MessageBox.Show("Are you sure you want to delete this notebook and all notes within?", "Delete Notebook?", MessageBoxButtons.YesNo);
+            if (dialogResult == DialogResult.Yes)
+            {
+                if (selectedNotebook != -1)
+                {
+                    // Call your data access method to delete the note
+                    SqliteDataAccess.DeleteNotebook(selectedNotebook);
+
+                    // Refresh the notes display
+                    SqliteDataAccess.LoadNotebooks();
+                    SqliteDataAccess.LoadNotes();
+                    AccordionControl();
+
+                    // Clear the selected note
+                    selectedNotebook = -1;
+                    ClearFields();
+                    MessageBox.Show("Notebook deleted successfully.");
+                }
+                else
+                {
+                    MessageBox.Show("Please select a notebook to delete.");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Deletion Canceled.");
+            }
         }
-
-        private void barButtonItem3_ItemClick(object sender, ItemClickEventArgs e)
+        private void txtUpdateNotebook_KeyDown(object sender, KeyEventArgs e) // context menu for updating a notebook
         {
-            txtMessage.Text = "";
-            txtTitle.Text = "";
-            lblDate.Text = "";
+            if (e.KeyCode == Keys.Enter)
+            {
+                if (selectedNotebook != -1) // Ensure a notebook is selected
+                {
+                    if (!string.IsNullOrWhiteSpace(txtUpdateNotebook.Text))
+                    {
+                        NotebookModel updatedNotebook = new NotebookModel
+                        {
+                            name = txtUpdateNotebook.Text
+                        };
+
+                        // Update the note in the database using title and date from the selectedNote
+                        SqliteDataAccess.UpdateNotebook(selectedNotebook, txtUpdateNotebook.Text);
+
+                        txtUpdateNotebook.Text = "";
+
+                        // Refresh the notes display
+                        SqliteDataAccess.LoadNotes();
+                        AccordionControl();
+                        MessageBox.Show("Notebook updated successfully.");
+                    }
+                    else
+                    {
+                        MessageBox.Show("Please fill in your notebook name.");
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Please select a notebook to edit.");
+                }
+            }
+        }
+        private void mnuNewNote_Click(object sender, EventArgs e) // Clears fields for new note creation
+        {
+            ClearFields();
+        }
+        private void mnuDeleteNote_Click(object sender, EventArgs e) // context menu for deleting a note
+        {
+            DialogResult dialogResult = MessageBox.Show("Are you sure you want to delete this note?", "Delete Note?", MessageBoxButtons.YesNo);
+            if (dialogResult == DialogResult.Yes)
+            {
+                if (!string.IsNullOrEmpty(selectedNote.title))
+                {
+                    // Call your data access method to delete the note
+                    SqliteDataAccess.DeleteNote(selectedNote.title, selectedNote.date);
+
+                    // Refresh the notes display
+                    SqliteDataAccess.LoadNotes();
+                    AccordionControl();
+
+                    // Clear the selected note
+                    selectedNote = (null, DateTime.MinValue);
+                    ClearFields();
+                    MessageBox.Show("Note deleted successfully.");
+                }
+                else
+                {
+                    MessageBox.Show("Please select a note to delete.");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Deletion Canceled.");
+            }
+        }
+        private void mnuArchiveNote_Click(object sender, EventArgs e)
+        {
+            // Call your data access method to archive the note
+            SqliteDataAccess.ArchiveNote(selectedNote.title, selectedNote.date);
+
+            // Refresh the notes display
+            SqliteDataAccess.LoadNotes();
+            AccordionControl();
+
+            // Clear the selected note
+            selectedNote = (null, DateTime.MinValue);
+            ClearFields();
+            MessageBox.Show("Note archived successfully.");
+        }
+        private void accordionCtlNotes_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                if (!string.IsNullOrEmpty(selectedNote.title))
+                {
+                    mnuNote.Show(MousePosition);
+                    ClearFields();
+                }
+                else 
+                {
+                    mnuNotebook.Show(MousePosition);
+                }
+            }
+            Console.WriteLine(GetControlAtPoint(this,e.Location));
+        }
+        private Control GetControlAtPoint(Control parent, Point point)
+        {
+            // Convert the point to the parent control's client coordinates
+            Point clientPoint = parent.PointToClient(point);
+
+            // Get the immediate child control at the specified point
+            Control child = parent.GetChildAtPoint(clientPoint);
+
+            if (child == null)
+            {
+                // No control found directly, return the parent if it's a container control
+                return parent;
+            }
+
+            // If the child is a container, recursively check for nested children
+            if (child.HasChildren)
+            {
+                // Recursively search for the control under the cursor within the child container
+                return GetControlAtPoint(child, point);
+            }
+
+            // If no children, return the child control found
+            return child;
         }
     }
 }
